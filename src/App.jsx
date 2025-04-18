@@ -6,59 +6,58 @@ const felter = [
     label: "P/E",
     autofill: true,
     forklaring:
-      "P/E (Price/Earnings) viser hvor meget du betaler for 1 krones overskud. Under 15 er ofte godt."
+      "P/E (Price/Earnings) viser hvor meget du betaler for 1 krones overskud. P/E under 15 anses ofte som lav og positivt."
   },
   {
     id: "peg",
     label: "PEG",
     autofill: false,
     forklaring:
-      "PEG justerer P/E i forhold til vækst. Under 1 anses ofte som undervurderet."
+      "PEG justerer P/E i forhold til indtjeningsvækst. En PEG under 1 indikerer en attraktiv aktie ift. vækstpotentiale."
   },
   {
     id: "eps",
     label: "EPS",
     autofill: true,
     forklaring:
-      "EPS (Earnings Per Share) er overskud pr. aktie. Høj EPS = stærk indtjening."
+      "EPS (Earnings Per Share) er overskud pr. aktie. Jo højere EPS, desto stærkere er virksomhedens indtjening."
   },
   {
     id: "dividend",
     label: "Direkte afkast (%)",
     autofill: true,
     forklaring:
-      "Udbytte i % af kurs. 2–5 % er typisk godt. Meget højt udbytte kan være en advarsel."
+      "Udbytte i procent af aktiekurs. Et sundt udbytte ligger ofte mellem 2–5 %. Meget højt udbytte kan være et faresignal."
   },
   {
     id: "revenue",
     label: "Omsætning",
     autofill: true,
     forklaring:
-      "Virksomhedens totale salg. Høj omsætning indikerer størrelse og markedsposition."
+      "Virksomhedens samlede indtjening før udgifter. Omsætning over 1 mia. viser ofte styrke og markedsposition."
   },
   {
     id: "netIncome",
     label: "Resultat efter skat",
     autofill: true,
     forklaring:
-      "Hvor meget virksomheden tjener efter skat. Skal helst være positivt og stabilt."
+      "Overskud efter skat. Skal helst være positivt. Tab kan være midlertidige, men kræver forklaring."
   },
   {
     id: "cashFlow",
     label: "Cash Flow",
     autofill: true,
     forklaring:
-      "Pengestrømme fra drift. Positivt cash flow = virksomheden tjener rigtige penge."
+      "Pengestrømme fra drift. Positivt og voksende cash flow er ofte et tegn på sund forretning."
   },
   {
     id: "equity",
     label: "Egenkapital",
     autofill: true,
     forklaring:
-      "Virksomhedens værdi efter gæld. Positiv egenkapital er afgørende for soliditet."
+      "Virksomhedens værdi efter gæld. Positiv og stigende egenkapital signalerer finansiel styrke."
   }
 ];
-
 
 const API_KEY = "d010239r01qv3oh1rcfgd010239r01qv3oh1rcg0";
 
@@ -157,208 +156,137 @@ export default function App() {
     setAktier([...aktier, ny]);
   };
 
- return (
-  <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
-    <h1 style={{ fontSize: "1.8rem", marginBottom: 20 }}>Sammenlign aktier</h1>
+  return (
+    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
+      <h1 style={{ fontSize: "1.8rem", marginBottom: 20 }}>Sammenlign aktier</h1>
 
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
-        gap: 20,
-      }}
-    >
-      {aktier.map((aktie, index) => (
-        <div
-          key={aktie.id}
-          style={{
-            background: "#fff",
-            border: "1px solid #ddd",
-            borderRadius: 10,
-            padding: 20,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>Aktie #{index + 1}</h3>
-
-          <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
-            <input
-              placeholder="Ticker (fx AAPL)"
-              value={aktie.ticker}
-              onChange={(e) => {
-                const updated = [...aktier];
-                updated[index].ticker = e.target.value;
-                setAktier(updated);
-              }}
-              style={{ flex: 1, padding: 6 }}
-            />
-            <button onClick={() => fetchData(index)}>Hent</button>
-          </div>
-
-          {felter.map(({ id, label, autofill, forklaring }) => (
-            <div key={id} style={{ marginBottom: 10 }}>
-              <label>
-                {label} ({aktie.currency}){" "}
-                <span
-                  style={{ cursor: "pointer", color: "#007bff" }}
-                  onClick={() => toggleForklaring(index, id)}
-                  title="Vis forklaring"
-                >
-                  ❓
-                </span>
-              </label>
-              <input
-                type="text"
-                value={aktie.values[id] || ""}
-                onChange={(e) => handleChange(index, id, e.target.value)}
-                style={{ width: "100%", padding: 6, marginTop: 4 }}
-              />
-              <div style={{ fontSize: 12, color: "#555", marginTop: 4 }}>
-                {aktie.autoFilled[id]
-                  ? "🔄 Live data from Finnhub"
-                  : autofill
-                  ? "⚠️ Live data not available – please fill out manually"
-                  : ""}
-              </div>
-              {aktie.values[`show_${id}`] && (
-                <div
-                  style={{
-                    fontSize: 13,
-                    color: "#444",
-                    marginTop: 6,
-                    background: "#f9f9f9",
-                    padding: 8,
-                    borderRadius: 4,
-                  }}
-                >
-                  {forklaring}
-                </div>
-              )}
-            </div>
-          ))}
-
-          <button
-            onClick={() => calculateScore(index)}
-            style={{
-              marginTop: 10,
-              padding: "8px 12px",
-              background: "#eee",
-              border: "1px solid #ccc",
-              borderRadius: 4,
-              cursor: "pointer",
-            }}
-          >
-            Beregn risiko
-          </button>
-
-          {aktie.score !== null && (
-            <div
-              style={{
-                marginTop: 10,
-                padding: 10,
-                border: `2px solid ${aktie.color}`,
-                borderRadius: 6,
-                background: "#fefefe",
-              }}
-            >
-              <strong>Risikoscore:</strong> {aktie.score} / 10
-              <br />
-              <strong style={{ color: aktie.color }}>{aktie.summary}</strong>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-
-    <div style={{ marginTop: 30, textAlign: "center" }}>
-      <button
-        onClick={tilføjAktie}
+      <div
         style={{
-          background: "#007bff",
-          color: "#fff",
-          padding: "12px 20px",
-          borderRadius: 8,
-          fontSize: "1rem",
-          border: "none",
-          cursor: "pointer",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+          gap: 20,
         }}
       >
-        ➕ Tilføj aktie
-      </button>
-    </div>
-  </div>
-);
+        {aktier.map((aktie, index) => (
+          <div
+            key={aktie.id}
+            style={{
+              background: "#fff",
+              border: "1px solid #ddd",
+              borderRadius: 10,
+              padding: 20,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <h3 style={{ marginTop: 0 }}>Aktie #{index + 1}</h3>
 
+            <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+              <input
+                placeholder="Ticker (fx AAPL)"
+                value={aktie.ticker}
+                onChange={(e) => {
+                  const updated = [...aktier];
+                  updated[index].ticker = e.target.value;
+                  setAktier(updated);
+                }}
+                style={{ flex: 1, padding: 6 }}
+              />
+              <button onClick={() => fetchData(index)}>Hent</button>
+            </div>
 
+            {felter.map(({ id, label, autofill, forklaring }) => (
+              <div key={id} style={{ marginBottom: 10 }}>
+                <label>
+                  {label} ({aktie.currency}){" "}
+                  <span
+                    style={{ cursor: "pointer", color: "#007bff" }}
+                    onClick={() => toggleForklaring(index, id)}
+                    title="Vis forklaring"
+                  >
+                    ❓
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  value={aktie.values[id] || ""}
+                  onChange={(e) => handleChange(index, id, e.target.value)}
+                  style={{ width: "100%", padding: 6, marginTop: 4 }}
+                />
+                <div style={{ fontSize: 12, color: "#555", marginTop: 4 }}>
+                  {aktie.autoFilled[id]
+                    ? "🔄 Live data from Finnhub"
+                    : autofill
+                    ? "⚠️ Live data not available – please fill out manually"
+                    : ""}
+                </div>
+                {aktie.values[`show_${id}`] && (
+                  <div
+                    style={{
+                      fontSize: 13,
+                      color: "#444",
+                      marginTop: 6,
+                      background: "#f9f9f9",
+                      padding: 8,
+                      borderRadius: 4,
+                    }}
+                  >
+                    {forklaring}
+                  </div>
+                )}
+              </div>
+            ))}
 
-  
+            <button
+              onClick={() => calculateScore(index)}
+              style={{
+                marginTop: 10,
+                padding: "8px 12px",
+                background: "#eee",
+                border: "1px solid #ccc",
+                borderRadius: 4,
+                cursor: "pointer",
+              }}
+            >
+              Beregn risiko
+            </button>
 
-  return (
-    <div style={{ maxWidth: 700, margin: "0 auto", padding: 20 }}>
-      <h1>Risikovurdering af aktie</h1>
-
-      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-        <input
-          placeholder="Ticker (fx AAPL)"
-          value={ticker}
-          onChange={(e) => setTicker(e.target.value)}
-        />
-        <button onClick={fetchData}>Hent data</button>
+            {aktie.score !== null && (
+              <div
+                style={{
+                  marginTop: 10,
+                  padding: 10,
+                  border: `2px solid ${aktie.color}`,
+                  borderRadius: 6,
+                  background: "#fefefe",
+                }}
+              >
+                <strong>Risikoscore:</strong> {aktie.score} / 10
+                <br />
+                <strong style={{ color: aktie.color }}>{aktie.summary}</strong>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
-     {felter.map(({ id, label, autofill, forklaring }) => (
-  <div key={id} style={{ marginBottom: 15 }}>
-    <label htmlFor={id}>
-      {label} ({currency}){" "}
-      <span
-        style={{ cursor: "pointer", color: "#007bff" }}
-        onClick={() =>
-          setValues((prev) => ({
-            ...prev,
-            [`show_${id}`]: !prev[`show_${id}`],
-          }))
-        }
-        title="Vis forklaring"
-      >
-        ❓
-      </span>
-    </label>
-    <input
-      id={id}
-      type="text"
-      value={values[id] || ""}
-      onChange={(e) => handleChange(id, e.target.value)}
-      style={{ width: "100%", padding: 6, marginTop: 4 }}
-    />
-    <div style={{ fontSize: 12, color: "#555", marginTop: 4 }}>
-      {autoFilled[id]
-        ? "🔄 Live data from Finnhub"
-        : autofill
-        ? "⚠️ Live data not available – please fill out manually"
-        : ""}
-    </div>
-    {values[`show_${id}`] && (
-      <div style={{ fontSize: 13, color: "#444", marginTop: 6, background: "#f9f9f9", padding: 8, borderRadius: 4 }}>
-        {forklaring}
+      <div style={{ marginTop: 30, textAlign: "center" }}>
+        <button
+          onClick={tilføjAktie}
+          style={{
+            background: "#007bff",
+            color: "#fff",
+            padding: "12px 20px",
+            borderRadius: 8,
+            fontSize: "1rem",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          ➕ Tilføj aktie
+        </button>
       </div>
-    )}
-  </div>
-))}
-
-
-      <button onClick={calculateScore} style={{ marginTop: 20 }}>
-        Beregn risiko
-      </button>
-
-      {score !== null && (
-        <div style={{ marginTop: 20, padding: 10, border: `2px solid ${color}` }}>
-          <strong>Risikoscore:</strong> {score} / 10
-          <br />
-          <strong style={{ color }}>{summary}</strong>
-        </div>
-      )}
     </div>
   );
 }

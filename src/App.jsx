@@ -153,27 +153,45 @@ export default function App() {
         <button onClick={fetchData}>Hent data</button>
       </div>
 
-      {felter.map(({ id, label, autofill }) => (
-        <div key={id} style={{ marginBottom: 15 }}>
-          <label htmlFor={id}>
-            {label} ({currency})
-          </label>
-          <input
-            id={id}
-            type="text"
-            value={values[id] || ""}
-            onChange={(e) => handleChange(id, e.target.value)}
-            style={{ width: "100%", padding: 6, marginTop: 4 }}
-          />
-          <div style={{ fontSize: 12, color: "#555", marginTop: 4 }}>
-            {autoFilled[id]
-              ? "🔄 Live data from Finnhub"
-              : autofill
-              ? "⚠️ Live data not available – please fill out manually"
-              : ""}
-          </div>
-        </div>
-      ))}
+     {felter.map(({ id, label, autofill, forklaring }) => (
+  <div key={id} style={{ marginBottom: 15 }}>
+    <label htmlFor={id}>
+      {label} ({currency}){" "}
+      <span
+        style={{ cursor: "pointer", color: "#007bff" }}
+        onClick={() =>
+          setValues((prev) => ({
+            ...prev,
+            [`show_${id}`]: !prev[`show_${id}`],
+          }))
+        }
+        title="Vis forklaring"
+      >
+        ❓
+      </span>
+    </label>
+    <input
+      id={id}
+      type="text"
+      value={values[id] || ""}
+      onChange={(e) => handleChange(id, e.target.value)}
+      style={{ width: "100%", padding: 6, marginTop: 4 }}
+    />
+    <div style={{ fontSize: 12, color: "#555", marginTop: 4 }}>
+      {autoFilled[id]
+        ? "🔄 Live data from Finnhub"
+        : autofill
+        ? "⚠️ Live data not available – please fill out manually"
+        : ""}
+    </div>
+    {values[`show_${id}`] && (
+      <div style={{ fontSize: 13, color: "#444", marginTop: 6, background: "#f9f9f9", padding: 8, borderRadius: 4 }}>
+        {forklaring}
+      </div>
+    )}
+  </div>
+))}
+
 
       <button onClick={calculateScore} style={{ marginTop: 20 }}>
         Beregn risiko

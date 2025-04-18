@@ -1,15 +1,64 @@
 import { useState } from "react";
 
 const felter = [
-  { id: "pe", label: "P/E", autofill: true },
-  { id: "peg", label: "PEG", autofill: false },
-  { id: "eps", label: "EPS", autofill: true },
-  { id: "dividend", label: "Direkte afkast (%)", autofill: true },
-  { id: "revenue", label: "Omsætning", autofill: true },
-  { id: "netIncome", label: "Resultat efter skat", autofill: true },
-  { id: "cashFlow", label: "Cash Flow", autofill: true },
-  { id: "equity", label: "Egenkapital", autofill: true }
+  {
+    id: "pe",
+    label: "P/E",
+    autofill: true,
+    forklaring:
+      "P/E (Price/Earnings) viser hvor meget du betaler for 1 krones overskud. Under 15 er ofte godt."
+  },
+  {
+    id: "peg",
+    label: "PEG",
+    autofill: false,
+    forklaring:
+      "PEG justerer P/E i forhold til vækst. Under 1 anses ofte som undervurderet."
+  },
+  {
+    id: "eps",
+    label: "EPS",
+    autofill: true,
+    forklaring:
+      "EPS (Earnings Per Share) er overskud pr. aktie. Høj EPS = stærk indtjening."
+  },
+  {
+    id: "dividend",
+    label: "Direkte afkast (%)",
+    autofill: true,
+    forklaring:
+      "Udbytte i % af kurs. 2–5 % er typisk godt. Meget højt udbytte kan være en advarsel."
+  },
+  {
+    id: "revenue",
+    label: "Omsætning",
+    autofill: true,
+    forklaring:
+      "Virksomhedens totale salg. Høj omsætning indikerer størrelse og markedsposition."
+  },
+  {
+    id: "netIncome",
+    label: "Resultat efter skat",
+    autofill: true,
+    forklaring:
+      "Hvor meget virksomheden tjener efter skat. Skal helst være positivt og stabilt."
+  },
+  {
+    id: "cashFlow",
+    label: "Cash Flow",
+    autofill: true,
+    forklaring:
+      "Pengestrømme fra drift. Positivt cash flow = virksomheden tjener rigtige penge."
+  },
+  {
+    id: "equity",
+    label: "Egenkapital",
+    autofill: true,
+    forklaring:
+      "Virksomhedens værdi efter gæld. Positiv egenkapital er afgørende for soliditet."
+  }
 ];
+
 
 const API_KEY = "d010239r01qv3oh1rcfgd010239r01qv3oh1rcg0";
 

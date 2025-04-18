@@ -1,281 +1,247 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
+import axios from "axios";
 
-const API_KEY = "d010239r01qv3oh1rcfgd010239r01qv3oh1rcg0";
+const apiKeys = {
+  yahoo: import.meta.env.VITE_YAHOO_API_KEY,
+  finnhub: import.meta.env.VITE_FINNHUB_API_KEY,
+  marketaux: import.meta.env.VITE_MARKETAUX_API_KEY,
+};
 
-const felter = [
-  {
-    id: "pe",
-    label: "P/E",
-    autofill: true,
-    forklaring: "P/E (Price/Earnings) viser hvor meget du betaler for 1 krones overskud. P/E under 15 anses ofte som lav og positivt."
-  },
-  {
-    id: "peg",
-    label: "PEG",
-    autofill: false,
-    forklaring: "PEG justerer P/E i forhold til vækst. Under 1 anses ofte som undervurderet."
-  },
-  {
-    id: "eps",
-    label: "EPS",
-    autofill: true,
-    forklaring: "EPS (Earnings Per Share) er overskud pr. aktie. Høj EPS = stærk indtjening."
-  },
-  {
-    id: "dividend",
-    label: "Direkte afkast (%)",
-    autofill: true,
-    forklaring: "Udbytte i % af kurs. 2–5 % er typisk godt. Meget højt udbytte kan være en advarsel."
-  },
-  {
-    id: "revenue",
-    label: "Omsætning",
-    autofill: true,
-    forklaring: "Virksomhedens samlede salg. Høj omsætning indikerer størrelse og markedsposition."
-  },
-  {
-    id: "netIncome",
-    label: "Resultat efter skat",
-    autofill: true,
-    forklaring: "Hvor meget virksomheden tjener efter skat. Skal helst være positivt og stabilt."
-  },
-  {
-    id: "cashFlow",
-    label: "Cash Flow",
-    autofill: true,
-    forklaring: "Pengestrømme fra drift. Positivt cash flow = virksomheden tjener rigtige penge."
-  },
-  {
-    id: "equity",
-    label: "Egenkapital",
-    autofill: true,
-    forklaring: "Virksomhedens værdi efter gæld. Positiv egenkapital er afgørende for soliditet."
-  }
-];
+const App = () => {
+  const [search, setSearch] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [aktier, setAktier] = useState([]);
 
-export default function App() {
-  const [aktier, setAktier] = useState([
-    {
-      id: 1,
-      ticker: "",
-      currency: "USD",
-      values: {},
-      autoFilled: {},
+  const handleSearch = async (e) => {
+    const value = e.target.value;
+    setSearch(value);
+    if (value.length < 2) return setSuggestions([]);
+
+    try {
+      const res = await axios.get(
+        `https://yh-finance.p.rapidapi.com/auto-complete?q=${value}&region=US`,
+        {
+          headers: {
+            "X-RapidAPI-Key": apiKeys.yahoo,
+            "X-RapidAPI-Host": "yh-finance.p.rapidapi.com",
+          },
+        }
+      );
+      const results = res.data.quotes.filter((item) => item.symbol && item.shortname);
+      setSuggestions(results.slice(0, 5));
+    } catch (error) {
+      console.error("Fejl i autosuggest:", error);
+      setSuggestions([]);
+    }
+  };
+
+  const addAktie = async (item) => {
+    setSearch("");
+    setSuggestions([]);
+    const ticker = item.symbol;
+    const name = item.shortname;
+
+    const newAktie = {
+      ticker,
+      name,
+      values: {
+        pe: "",
+        peg: "",
+        eps: "",
+        dividend: "",
+        revenue: "",
+        netIncome: "",
+        cashFlow: "",
+        equity: "",
+      },
+      labels: {},
       score: null,
-      summary: "",
       color: "",
-      comments: []
+      summary: "",
+    };
+
+    const updated = [...aktier, newAktie];
+    setAktier(updated);
+    await fetchData(updated.length - 1, ticker);
+  };
+
+  const fetchData = async (index, ticker) => {
+    const updated = [...aktier];
+    const aktie = updated[index];
+
+    try {
+      const res = await axios.get(
+        `https://yh-finance.p.rapidapi.com/stock/v2/get-summary?symbol=${ticker}&region=US`,
+        {
+          headers: {
+            "X-RapidAPI-Key": apiKeys.yahoo,
+            "X-RapidAPI-Host": "yh-finance.p.rapidapi.com",
+          },
+        }
+      );
+
+      const q = res.data?.summaryDetail || {};
+      aktie.values.pe = q.trailingPE?.raw ?? "";
+      aktie.values.peg = q.pegRatio?.raw ?? "";
+      aktie.values.eps = res.data?.defaultKeyStatistics?.trailingEps?.raw ?? "";
+      aktie.values.dividend = q.dividendYield?.raw ? q.dividendYield.raw * 100 : "";
+      aktie.currency = q.currency ?? "";
+
+      aktie.labels.pe = q.trailingPE ? "Live data from Yahoo" : "Please input manually";
+      aktie.labels.peg = q.pegRatio ? "Live data from Yahoo" : "Please input manually";
+      aktie.labels.eps = res.data?.defaultKeyStatistics?.trailingEps ? "Live data from Yahoo" : "Please input manually";
+      aktie.labels.dividend = q.dividendYield ? "Live data from Yahoo" : "Please input manually";
+
+    } catch (error) {
+      console.warn("Yahoo fejlede – prøver Finnhub fallback");
+      try {
+        const fallback = await axios.get(
+          `https://finnhub.io/api/v1/stock/metric?symbol=${ticker}&metric=all&token=${apiKeys.finnhub}`
+        );
+        const d = fallback.data.metric;
+        aktie.values.pe = d.peNormalizedAnnual ?? "";
+        aktie.values.peg = d.pegAnnual ?? "";
+        aktie.values.eps = d.epsInclExtraItemsAnnual ?? "";
+        aktie.values.dividend = d.dividendYieldIndicatedAnnual ?? "";
+        aktie.currency = "USD";
+
+        aktie.labels.pe = d.peNormalizedAnnual ? "Fallback from Finnhub" : "Please input manually";
+        aktie.labels.peg = d.pegAnnual ? "Fallback from Finnhub" : "Please input manually";
+        aktie.labels.eps = d.epsInclExtraItemsAnnual ? "Fallback from Finnhub" : "Please input manually";
+        aktie.labels.dividend = d.dividendYieldIndicatedAnnual ? "Fallback from Finnhub" : "Please input manually";
+      } catch (e) {
+        console.error("Begge datakilder fejlede", e);
+      }
     }
-  ]);
 
-  const handleChange = (index, id, value) => {
-    const updated = [...aktier];
-    updated[index].values[id] = value;
-    setAktier(updated);
+    calculateScore(index, updated);
   };
 
-  const toggleForklaring = (index, id) => {
-    const updated = [...aktier];
-    updated[index].values[`show_${id}`] = !updated[index].values[`show_${id}`];
-    setAktier(updated);
-  };
-
-  const fetchData = async (index) => {
-    const ticker = aktier[index].ticker;
-    if (!ticker) return;
-
-    const [profile, metrics] = await Promise.all([
-      fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${API_KEY}`).then(res => res.json()),
-      fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${ticker}&metric=all&token=${API_KEY}`).then(res => res.json())
-    ]);
-
-    const newValues = {
-      pe: metrics.metric.peNormalizedAnnual,
-      eps: metrics.metric.epsNormalizedAnnual,
-      dividend: metrics.metric.dividendYield,
-      revenue: metrics.metric.revenuePerShareTTM,
-      netIncome: metrics.metric.netIncomePerShareTTM,
-      cashFlow: metrics.metric.freeCashFlowPerShareTTM,
-      equity: metrics.metric.bookValuePerShareAnnual
-    };
-
-    const updated = [...aktier];
-    updated[index].values = {
-      ...updated[index].values,
-      ...newValues
-    };
-    updated[index].autoFilled = Object.fromEntries(
-      Object.entries(newValues).map(([k, v]) => [k, v !== null && v !== undefined])
-    );
-    updated[index].currency = profile.currency || "USD";
-    setAktier(updated);
-  };
-
-  const calculateScore = (index) => {
+  const calculateScore = (index, updatedList = aktier) => {
     let s = 0;
-    let comments = [];
-    const v = aktier[index].values;
+    const v = updatedList[index].values;
 
-    if (v.pe < 15) {
-      s += 2;
-      comments.push("P/E under 15 indikerer lav pris ift. indtjening – positivt.");
-    } else if (v.pe < 25) {
-      s += 1;
-    }
+    if (v.pe < 15) s += 2;
+    else if (v.pe < 25) s += 1;
 
-    if (v.peg < 1) {
-      s += 2;
-      comments.push("PEG under 1 tyder på attraktiv vækstværdi.");
-    } else if (v.peg < 2) {
-      s += 1;
-    }
+    if (v.peg < 1) s += 2;
+    else if (v.peg < 2) s += 1;
 
-    if (v.eps > 0) {
-      s += 2;
-      comments.push("Positiv EPS viser overskud – godt tegn.");
-    }
+    if (v.eps > 0) s += 2;
+    if (v.dividend > 3) s += 2;
+    else if (v.dividend > 0) s += 1;
 
-    if (v.dividend > 3) {
-      s += 2;
-      comments.push("Udbytte over 3 % kan være attraktivt for investorer.");
-    } else if (v.dividend > 0) {
-      s += 1;
-    }
-
-    if (v.revenue > 1000000000) {
-      s += 2;
-    } else if (v.revenue > 100000000) {
-      s += 1;
-    }
+    if (v.revenue > 1000000000) s += 2;
+    else if (v.revenue > 100000000) s += 1;
 
     if (v.netIncome > 0) s += 2;
     if (v.cashFlow > 0) s += 2;
     if (v.equity > 0) s += 2;
 
     const normalized = Math.round((s / 20) * 10);
-    const updated = [...aktier];
-    updated[index].score = normalized;
-    updated[index].color = normalized <= 3 ? "green" : normalized <= 6 ? "orange" : "red";
-    updated[index].summary =
+    updatedList[index].score = normalized;
+    updatedList[index].color =
+      normalized <= 3 ? "green" : normalized <= 6 ? "orange" : "red";
+    updatedList[index].summary =
       normalized <= 3
         ? "Lav risiko – stærke nøgletal"
         : normalized <= 6
         ? "Moderat risiko – OK fundament"
         : "Høj risiko – kræver grundig analyse";
-    updated[index].comments = comments;
-    setAktier(updated);
+
+    setAktier([...updatedList]);
   };
 
-  const tilføjAktie = () => {
-    setAktier([
-      ...aktier,
-      {
-        id: aktier.length + 1,
-        ticker: "",
-        currency: "USD",
-        values: {},
-        autoFilled: {},
-        score: null,
-        summary: "",
-        color: "",
-        comments: []
-      }
-    ]);
-  };
+    return (
+    <div style={{ fontFamily: "Roboto, sans-serif", padding: "2rem" }}>
+      <h1 style={{ fontSize: "24px", marginBottom: "1rem" }}>📊 Aktie Risikovurdering</h1>
+      <p style={{ marginBottom: "1rem" }}>
+        Indtast en aktie (ticker eller navn) og få automatisk vurdering af risiko baseret på nøgletal.
+      </p>
 
-  return (
-    <div style={{ fontFamily: "Roboto, Open Sans, Verdana, sans-serif", padding: 20, maxWidth: 1200, margin: "0 auto" }}>
-      <div style={{ background: "#f2f2f2", padding: 15, borderRadius: 10, marginBottom: 20 }}>
-        <h2 style={{ margin: 0 }}>📊 Aktie Risikovurdering</h2>
-        <p style={{ marginTop: 8 }}>
-          Indtast en ticker for at hente live nøgletal og vurder aktiens risiko. Du kan sammenligne flere aktier ved at tilføje flere.
-        </p>
-      </div>
+      <input
+        type="text"
+        placeholder="Søg aktie (f.eks. Novo Nordisk eller NVO)"
+        value={search}
+        onChange={handleSearch}
+        style={{
+          padding: "0.5rem",
+          width: "100%",
+          maxWidth: "400px",
+          marginBottom: "0.5rem",
+        }}
+      />
 
-      {aktier.map((aktie, index) => (
-        <div key={aktie.id} style={{ marginBottom: 30, padding: 20, border: "1px solid #ccc", borderRadius: 10 }}>
-          <h3>Aktie #{index + 1}</h3>
-          <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
-            <input
-              placeholder="Ticker (fx AAPL)"
-              value={aktie.ticker}
-              onChange={(e) => {
-                const updated = [...aktier];
-                updated[index].ticker = e.target.value;
-                setAktier(updated);
+      {suggestions.length > 0 && (
+        <div style={{ border: "1px solid #ccc", maxWidth: "400px", background: "#fff" }}>
+          {suggestions.map((item) => (
+            <div
+              key={item.symbol}
+              onClick={() => addAktie(item)}
+              style={{
+                padding: "0.5rem",
+                cursor: "pointer",
+                borderBottom: "1px solid #eee",
               }}
-              style={{ flex: 1, padding: 6 }}
-            />
-            <button onClick={() => fetchData(index)}>Hent data</button>
-          </div>
-
-          {felter.map(({ id, label, autofill, forklaring }) => (
-            <div key={id} style={{ marginBottom: 12 }}>
-              <label
-                onClick={() => toggleForklaring(index, id)}
-                style={{ fontWeight: "bold", fontSize: 18, fontFamily: "Roboto", cursor: "pointer" }}
-              >
-                {label} ({aktie.currency}) <span style={{ color: "#000" }}>▼</span>
-              </label>
-              <input
-                type="text"
-                value={aktie.values[id] || ""}
-                placeholder={!aktie.autoFilled[id] && autofill ? "please input manually" : ""}
-                onChange={(e) => handleChange(index, id, e.target.value)}
-                style={{ width: "100%", padding: 6, marginTop: 4 }}
-              />
-              <div style={{ fontSize: 12, color: "#555", marginTop: 4 }}>
-                {aktie.autoFilled[id]
-                  ? "🔄 Live data from Finnhub"
-                  : autofill
-                  ? "⚠️ Live data not available – please fill out manually"
-                  : ""}
-              </div>
-              {aktie.values[`show_${id}`] && (
-                <div style={{ fontSize: 13, background: "#f9f9f9", padding: 8, borderRadius: 6, marginTop: 6 }}>
-                  {forklaring}
-                </div>
-              )}
+            >
+              {item.shortname} – <strong>{item.symbol}</strong>
             </div>
           ))}
+        </div>
+      )}
 
-          <button onClick={() => calculateScore(index)} style={{ marginTop: 10 }}>
-            Beregn risiko
-          </button>
+      {aktier.map((aktie, index) => (
+        <div
+          key={index}
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            padding: "1rem",
+            marginTop: "1.5rem",
+          }}
+        >
+          <h2 style={{ fontSize: "20px", marginBottom: "0.5rem" }}>
+            {aktie.name} ({aktie.ticker}) – {aktie.currency}
+          </h2>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            {Object.entries(aktie.values).map(([key, value]) => (
+              <div key={key}>
+                <label style={{ fontWeight: "bold", fontSize: "18px" }}>{key.toUpperCase()}</label>
+                <input
+                  type="number"
+                  placeholder="please input manually"
+                  value={value}
+                  onChange={(e) => {
+                    const updated = [...aktier];
+                    updated[index].values[key] = parseFloat(e.target.value);
+                    setAktier(updated);
+                    calculateScore(index, updated);
+                  }}
+                  style={{ width: "100%", padding: "0.25rem", marginTop: "0.25rem" }}
+                />
+                <div style={{ fontSize: "12px", color: "#666", marginTop: "0.25rem" }}>
+                  {aktie.labels[key]}
+                </div>
+              </div>
+            ))}
+          </div>
 
           {aktie.score !== null && (
-            <div style={{ marginTop: 10, border: `2px solid ${aktie.color}`, padding: 10, borderRadius: 8 }}>
-              <strong>Risikoscore:</strong> {aktie.score} / 10
-              <br />
-              <strong style={{ color: aktie.color }}>{aktie.summary}</strong>
-              {aktie.comments.length > 0 && (
-                <ul style={{ marginTop: 10 }}>
-                  {aktie.comments.map((c, i) => (
-                    <li key={i} style={{ fontSize: 13 }}>{c}</li>
-                  ))}
-                </ul>
-              )}
+            <div style={{ marginTop: "1rem" }}>
+              <p>
+                <strong>Risikovurdering:</strong>{" "}
+                <span style={{ color: aktie.color }}>
+                  {aktie.score} / 10
+                </span>
+              </p>
+              <p>{aktie.summary}</p>
             </div>
           )}
         </div>
       ))}
-
-      <div style={{ textAlign: "center", marginTop: 30 }}>
-        <button
-          onClick={tilføjAktie}
-          style={{
-            padding: "10px 20px",
-            background: "#007bff",
-            color: "#fff",
-            fontSize: "1rem",
-            border: "none",
-            borderRadius: 6,
-            cursor: "pointer"
-          }}
-        >
-          ➕ Tilføj aktie
-        </button>
-      </div>
     </div>
   );
-}
+};
+
+export default App;

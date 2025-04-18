@@ -63,17 +63,182 @@ const felter = [
 const API_KEY = "d010239r01qv3oh1rcfgd010239r01qv3oh1rcg0";
 
 export default function App() {
-  const [ticker, setTicker] = useState("");
-  const [currency, setCurrency] = useState("USD");
-  const [values, setValues] = useState({});
-  const [autoFilled, setAutoFilled] = useState({});
-  const [score, setScore] = useState(null);
-  const [summary, setSummary] = useState("");
-  const [color, setColor] = useState("gray");
+  const [aktier, setAktier] = useState([
+    { id: 1, ticker: "", currency: "USD", values: {}, autoFilled: {}, score: null, summary: "", color: "" }
+  ]);
 
-  const handleChange = (id, value) => {
-    setValues({ ...values, [id]: value });
+  const handleChange = (index, id, value) => {
+    const updated = [...aktier];
+    updated[index].values[id] = value;
+    setAktier(updated);
   };
+
+  const toggleForklaring = (index, id) => {
+    const updated = [...aktier];
+    updated[index].values[`show_${id}`] = !updated[index].values[`show_${id}`];
+    setAktier(updated);
+  };
+
+  const fetchData = async (index) => {
+    const ticker = aktier[index].ticker;
+    if (!ticker) return;
+
+    const [quote, profile, metrics] = await Promise.all([
+      fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`).then(res => res.json()),
+      fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${API_KEY}`).then(res => res.json()),
+      fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${ticker}&metric=all&token=${API_KEY}`).then(res => res.json()),
+    ]);
+
+    const newValues = {
+      pe: metrics.metric.peNormalizedAnnual,
+      eps: metrics.metric.epsNormalizedAnnual,
+      dividend: metrics.metric.dividendYield,
+      revenue: metrics.metric.revenuePerShareTTM,
+      netIncome: metrics.metric.netIncomePerShareTTM,
+      cashFlow: metrics.metric.freeCashFlowPerShareTTM,
+      equity: metrics.metric.bookValuePerShareAnnual,
+    };
+
+    const updated = [...aktier];
+    updated[index].values = { ...updated[index].values, ...newValues };
+    updated[index].autoFilled = Object.fromEntries(Object.keys(newValues).map(k => [k, true]));
+    updated[index].currency = profile.currency || "USD";
+    setAktier(updated);
+  };
+
+  const calculateScore = (index) => {
+    let s = 0;
+    const v = aktier[index].values;
+
+    if (v.pe < 15) s += 2;
+    else if (v.pe < 25) s += 1;
+
+    if (v.peg < 1) s += 2;
+    else if (v.peg < 2) s += 1;
+
+    if (v.eps > 0) s += 2;
+    if (v.dividend > 3) s += 2;
+    else if (v.dividend > 0) s += 1;
+
+    if (v.revenue > 1000000000) s += 2;
+    else if (v.revenue > 100000000) s += 1;
+
+    if (v.netIncome > 0) s += 2;
+    if (v.cashFlow > 0) s += 2;
+    if (v.equity > 0) s += 2;
+
+    const normalized = Math.round((s / 20) * 10);
+
+    const updated = [...aktier];
+    updated[index].score = normalized;
+    updated[index].color =
+      normalized <= 3 ? "green" : normalized <= 6 ? "orange" : "red";
+    updated[index].summary =
+      normalized <= 3
+        ? "Lav risiko – stærke nøgletal"
+        : normalized <= 6
+        ? "Moderat risiko – OK fundament"
+        : "Høj risiko – kræver grundig analyse";
+
+    setAktier(updated);
+  };
+
+  const tilføjAktie = () => {
+    const ny = {
+      id: aktier.length + 1,
+      ticker: "",
+      currency: "USD",
+      values: {},
+      autoFilled: {},
+      score: null,
+      summary: "",
+      color: ""
+    };
+    setAktier([...aktier, ny]);
+  };
+
+  return (
+    <div style={{ padding: 20 }}>
+      <h1>Sammenlign aktier</h1>
+      {aktier.map((aktie, index) => (
+        <div key={aktie.id} style={{ marginBottom: 40, padding: 20, border: "1px solid #ddd", borderRadius: 6 }}>
+          <h3>Aktie #{index + 1}</h3>
+          <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+            <input
+              placeholder="Ticker (fx AAPL)"
+              value={aktie.ticker}
+              onChange={(e) => {
+                const updated = [...aktier];
+                updated[index].ticker = e.target.value;
+                setAktier(updated);
+              }}
+            />
+            <button onClick={() => fetchData(index)}>Hent data</button>
+          </div>
+
+          {felter.map(({ id, label, autofill, forklaring }) => (
+            <div key={id} style={{ marginBottom: 10 }}>
+              <label>
+                {label} ({aktie.currency}){" "}
+                <span
+                  style={{ cursor: "pointer", color: "#007bff" }}
+                  onClick={() => toggleForklaring(index, id)}
+                  title="Vis forklaring"
+                >
+                  ❓
+                </span>
+              </label>
+              <input
+                type="text"
+                value={aktie.values[id] || ""}
+                onChange={(e) => handleChange(index, id, e.target.value)}
+                style={{ width: "100%", padding: 6, marginTop: 4 }}
+              />
+              <div style={{ fontSize: 12, color: "#555", marginTop: 4 }}>
+                {aktie.autoFilled[id]
+                  ? "🔄 Live data from Finnhub"
+                  : autofill
+                  ? "⚠️ Live data not available – please fill out manually"
+                  : ""}
+              </div>
+              {aktie.values[`show_${id}`] && (
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: "#444",
+                    marginTop: 6,
+                    background: "#f9f9f9",
+                    padding: 8,
+                    borderRadius: 4,
+                  }}
+                >
+                  {forklaring}
+                </div>
+              )}
+            </div>
+          ))}
+
+          <button onClick={() => calculateScore(index)} style={{ marginTop: 10 }}>
+            Beregn risiko
+          </button>
+
+          {aktie.score !== null && (
+            <div style={{ marginTop: 10, padding: 10, border: `2px solid ${aktie.color}` }}>
+              <strong>Risikoscore:</strong> {aktie.score} / 10
+              <br />
+              <strong style={{ color: aktie.color }}>{aktie.summary}</strong>
+            </div>
+          )}
+        </div>
+      ))}
+
+      <button onClick={tilføjAktie} style={{ background: "#007bff", color: "#fff", padding: "10px 20px", borderRadius: 5 }}>
+        ➕ Tilføj aktie
+      </button>
+    </div>
+  );
+}
+
 
   const fetchData = async () => {
     if (!ticker) return;

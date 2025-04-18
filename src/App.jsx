@@ -171,6 +171,26 @@ const App = () => {
           marginBottom: "0.5rem",
         }}
       />
+<button
+  onClick={() => {
+    if (suggestions.length > 0) {
+      addAktie(suggestions[0]);
+    } else {
+      alert("Ingen gyldige forslag – prøv at skrive mere præcist");
+    }
+  }}
+  style={{
+    padding: "0.5rem 1rem",
+    marginTop: "0.5rem",
+    backgroundColor: "#0070f3",
+    color: "#fff",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer"
+  }}
+>
+  Tilføj aktie
+</button>
 
       {suggestions.length > 0 && (
         <div style={{ border: "1px solid #ccc", maxWidth: "400px", background: "#fff" }}>

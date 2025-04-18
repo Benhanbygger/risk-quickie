@@ -34,3 +34,92 @@ git clone https://github.com/Benhanbygger/risk-quickie.git
 cd risk-quickie
 npm install
 npm run dev
+
+---
+
+## 🔐 API-adgang
+
+Du skal oprette følgende API-nøgler og placere dem i en `.env`-fil i roden af projektet:
+
+```env
+VITE_YAHOO_API_KEY=din_yahoo_nøgle
+VITE_FINNHUB_API_KEY=4BTEIMDONRBI7XJ5
+VITE_MARKETAUX_API_KEY=bW8KZvKDF1bzkpVK11SNEuCece92OOVp1Fmf5OdX
+
+---
+
+## 🔐 Brugte API'er:
+
+🟡 **Yahoo Finance via RapidAPI**  
+→ Bruges til autofuldførelse og nøgletal  
+🔗 https://rapidapi.com/apidojo/api/yahoo-finance1/
+
+🔵 **Finnhub.io**  
+→ Bruges til backup af nøgletal og valutainfo  
+🔗 https://finnhub.io
+
+🟣 **Marketaux News API**  
+→ Bruges til at hente nyheder og artikler om aktier  
+🔗 https://www.marketaux.com
+
+---
+
+## 🧪 Brugervejledning
+
+1. Indtast et firmanavn eller ticker
+2. Vælg aktien fra listen i dropdown
+3. Appen henter automatisk nøgletal og nyheder
+4. Du får en farvekodet risikoscore (1–10)
+5. Læs AI-genereret kommentar baseret på nøgletal
+6. Sammenlign flere aktier side om side
+7. Se relevante nyheder med dato og kilde
+
+---
+
+## 🔮 Kommende funktioner
+
+- 📄 PDF-eksport af vurdering
+- ⭐ Favoritaktier og brugerlogin
+- 🧠 Fuldt AI-sammendrag af nyhedsdata
+- 📊 Udvidet analyse: ESG, teknisk, sektormæssig
+- 🌍 Flersprogsfunktion (DK/EN)
+- 📈 Flere grafer og nøgletal over tid
+---
+
+## 🔐 Brugte API'er:
+
+🟡 **Yahoo Finance via RapidAPI**  
+→ Bruges til autofuldførelse og nøgletal  
+🔗 https://rapidapi.com/apidojo/api/yahoo-finance1/
+
+🔵 **Finnhub.io**  
+→ Bruges til backup af nøgletal og valutainfo  
+🔗 https://finnhub.io
+
+🟣 **Marketaux News API**  
+→ Bruges til at hente nyheder og artikler om aktier  
+🔗 https://www.marketaux.com
+
+---
+
+## 🧪 Brugervejledning
+
+1. Indtast et firmanavn eller ticker
+2. Vælg aktien fra listen i dropdown
+3. Appen henter automatisk nøgletal og nyheder
+4. Du får en farvekodet risikoscore (1–10)
+5. Læs AI-genereret kommentar baseret på nøgletal
+6. Sammenlign flere aktier side om side
+7. Se relevante nyheder med dato og kilde
+
+---
+
+## 🔮 Kommende funktioner
+
+- 📄 PDF-eksport af vurdering
+- ⭐ Favoritaktier og brugerlogin
+- 🧠 Fuldt AI-sammendrag af nyhedsdata
+- 📊 Udvidet analyse: ESG, teknisk, sektormæssig
+- 🌍 Flersprogsfunktion (DK/EN)
+- 📈 Flere grafer og nøgletal over tid
+

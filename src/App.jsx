@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import axios from "axios";
 
 const apiKeys = {
-  yahoo: import.meta.env.VITE_YAHOO_API_KEY,
   finnhub: import.meta.env.VITE_FINNHUB_API_KEY,
   marketaux: import.meta.env.VITE_MARKETAUX_API_KEY,
 };
@@ -19,18 +18,12 @@ const App = () => {
 
     try {
       const res = await axios.get(
-        `https://yh-finance.p.rapidapi.com/auto-complete?q=${value}&region=US`,
-        {
-          headers: {
-            "X-RapidAPI-Key": apiKeys.yahoo,
-            "X-RapidAPI-Host": "yh-finance.p.rapidapi.com",
-          },
-        }
+        `https://finnhub.io/api/v1/search?q=${value}&token=${apiKeys.finnhub}`
       );
-      const results = res.data.quotes.filter((item) => item.symbol && item.shortname);
+      const results = res.data.result.filter((item) => item.symbol && item.description);
       setSuggestions(results.slice(0, 5));
     } catch (error) {
-      console.error("Fejl i autosuggest:", error);
+      console.error("Fejl i Finnhub autosuggest:", error);
       setSuggestions([]);
     }
   };
@@ -39,7 +32,7 @@ const App = () => {
     setSearch("");
     setSuggestions([]);
     const ticker = item.symbol;
-    const name = item.shortname;
+    const name = item.description;
 
     const newAktie = {
       ticker,
@@ -70,48 +63,22 @@ const App = () => {
     const aktie = updated[index];
 
     try {
-      const res = await axios.get(
-        `https://yh-finance.p.rapidapi.com/stock/v2/get-summary?symbol=${ticker}&region=US`,
-        {
-          headers: {
-            "X-RapidAPI-Key": apiKeys.yahoo,
-            "X-RapidAPI-Host": "yh-finance.p.rapidapi.com",
-          },
-        }
+      const fallback = await axios.get(
+        `https://finnhub.io/api/v1/stock/metric?symbol=${ticker}&metric=all&token=${apiKeys.finnhub}`
       );
+      const d = fallback.data.metric;
+      aktie.values.pe = d.peNormalizedAnnual ?? "";
+      aktie.values.peg = d.pegAnnual ?? "";
+      aktie.values.eps = d.epsInclExtraItemsAnnual ?? "";
+      aktie.values.dividend = d.dividendYieldIndicatedAnnual ?? "";
+      aktie.currency = "USD";
 
-      const q = res.data?.summaryDetail || {};
-      aktie.values.pe = q.trailingPE?.raw ?? "";
-      aktie.values.peg = q.pegRatio?.raw ?? "";
-      aktie.values.eps = res.data?.defaultKeyStatistics?.trailingEps?.raw ?? "";
-      aktie.values.dividend = q.dividendYield?.raw ? q.dividendYield.raw * 100 : "";
-      aktie.currency = q.currency ?? "";
-
-      aktie.labels.pe = q.trailingPE ? "Live data from Yahoo" : "Please input manually";
-      aktie.labels.peg = q.pegRatio ? "Live data from Yahoo" : "Please input manually";
-      aktie.labels.eps = res.data?.defaultKeyStatistics?.trailingEps ? "Live data from Yahoo" : "Please input manually";
-      aktie.labels.dividend = q.dividendYield ? "Live data from Yahoo" : "Please input manually";
-
-    } catch (error) {
-      console.warn("Yahoo fejlede – prøver Finnhub fallback");
-      try {
-        const fallback = await axios.get(
-          `https://finnhub.io/api/v1/stock/metric?symbol=${ticker}&metric=all&token=${apiKeys.finnhub}`
-        );
-        const d = fallback.data.metric;
-        aktie.values.pe = d.peNormalizedAnnual ?? "";
-        aktie.values.peg = d.pegAnnual ?? "";
-        aktie.values.eps = d.epsInclExtraItemsAnnual ?? "";
-        aktie.values.dividend = d.dividendYieldIndicatedAnnual ?? "";
-        aktie.currency = "USD";
-
-        aktie.labels.pe = d.peNormalizedAnnual ? "Fallback from Finnhub" : "Please input manually";
-        aktie.labels.peg = d.pegAnnual ? "Fallback from Finnhub" : "Please input manually";
-        aktie.labels.eps = d.epsInclExtraItemsAnnual ? "Fallback from Finnhub" : "Please input manually";
-        aktie.labels.dividend = d.dividendYieldIndicatedAnnual ? "Fallback from Finnhub" : "Please input manually";
-      } catch (e) {
-        console.error("Begge datakilder fejlede", e);
-      }
+      aktie.labels.pe = d.peNormalizedAnnual ? "Live data from Finnhub" : "Please input manually";
+      aktie.labels.peg = d.pegAnnual ? "Live data from Finnhub" : "Please input manually";
+      aktie.labels.eps = d.epsInclExtraItemsAnnual ? "Live data from Finnhub" : "Please input manually";
+      aktie.labels.dividend = d.dividendYieldIndicatedAnnual ? "Live data from Finnhub" : "Please input manually";
+    } catch (e) {
+      console.error("Datakilder fejlede", e);
     }
 
     calculateScore(index, updated);
@@ -152,7 +119,7 @@ const App = () => {
     setAktier([...updatedList]);
   };
 
-    return (
+  return (
     <div style={{ fontFamily: "Roboto, sans-serif", padding: "2rem" }}>
       <h1 style={{ fontSize: "24px", marginBottom: "1rem" }}>📊 Aktie Risikovurdering</h1>
       <p style={{ marginBottom: "1rem" }}>
@@ -171,26 +138,27 @@ const App = () => {
           marginBottom: "0.5rem",
         }}
       />
-<button
-  onClick={() => {
-    if (suggestions.length > 0) {
-      addAktie(suggestions[0]);
-    } else {
-      alert("Ingen gyldige forslag – prøv at skrive mere præcist");
-    }
-  }}
-  style={{
-    padding: "0.5rem 1rem",
-    marginTop: "0.5rem",
-    backgroundColor: "#0070f3",
-    color: "#fff",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer"
-  }}
->
-  Tilføj aktie
-</button>
+
+      <button
+        onClick={() => {
+          if (suggestions.length > 0) {
+            addAktie(suggestions[0]);
+          } else {
+            alert("Ingen gyldige forslag – prøv at skrive mere præcist");
+          }
+        }}
+        style={{
+          padding: "0.5rem 1rem",
+          marginTop: "0.5rem",
+          backgroundColor: "#0070f3",
+          color: "#fff",
+          border: "none",
+          borderRadius: "4px",
+          cursor: "pointer"
+        }}
+      >
+        Tilføj aktie
+      </button>
 
       {suggestions.length > 0 && (
         <div style={{ border: "1px solid #ccc", maxWidth: "400px", background: "#fff" }}>
@@ -204,7 +172,7 @@ const App = () => {
                 borderBottom: "1px solid #eee",
               }}
             >
-              {item.shortname} – <strong>{item.symbol}</strong>
+              {item.description} – <strong>{item.symbol}</strong>
             </div>
           ))}
         </div>

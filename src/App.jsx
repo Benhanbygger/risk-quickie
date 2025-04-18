@@ -157,12 +157,32 @@ export default function App() {
     setAktier([...aktier, ny]);
   };
 
-  return (
-    <div style={{ padding: 20 }}>
-      <h1>Sammenlign aktier</h1>
+ return (
+  <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
+    <h1 style={{ fontSize: "1.8rem", marginBottom: 20 }}>Sammenlign aktier</h1>
+
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+        gap: 20,
+      }}
+    >
       {aktier.map((aktie, index) => (
-        <div key={aktie.id} style={{ marginBottom: 40, padding: 20, border: "1px solid #ddd", borderRadius: 6 }}>
-          <h3>Aktie #{index + 1}</h3>
+        <div
+          key={aktie.id}
+          style={{
+            background: "#fff",
+            border: "1px solid #ddd",
+            borderRadius: 10,
+            padding: 20,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <h3 style={{ marginTop: 0 }}>Aktie #{index + 1}</h3>
+
           <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
             <input
               placeholder="Ticker (fx AAPL)"
@@ -172,8 +192,9 @@ export default function App() {
                 updated[index].ticker = e.target.value;
                 setAktier(updated);
               }}
+              style={{ flex: 1, padding: 6 }}
             />
-            <button onClick={() => fetchData(index)}>Hent data</button>
+            <button onClick={() => fetchData(index)}>Hent</button>
           </div>
 
           {felter.map(({ id, label, autofill, forklaring }) => (
@@ -218,12 +239,30 @@ export default function App() {
             </div>
           ))}
 
-          <button onClick={() => calculateScore(index)} style={{ marginTop: 10 }}>
+          <button
+            onClick={() => calculateScore(index)}
+            style={{
+              marginTop: 10,
+              padding: "8px 12px",
+              background: "#eee",
+              border: "1px solid #ccc",
+              borderRadius: 4,
+              cursor: "pointer",
+            }}
+          >
             Beregn risiko
           </button>
 
           {aktie.score !== null && (
-            <div style={{ marginTop: 10, padding: 10, border: `2px solid ${aktie.color}` }}>
+            <div
+              style={{
+                marginTop: 10,
+                padding: 10,
+                border: `2px solid ${aktie.color}`,
+                borderRadius: 6,
+                background: "#fefefe",
+              }}
+            >
               <strong>Risikoscore:</strong> {aktie.score} / 10
               <br />
               <strong style={{ color: aktie.color }}>{aktie.summary}</strong>
@@ -231,13 +270,27 @@ export default function App() {
           )}
         </div>
       ))}
+    </div>
 
-      <button onClick={tilføjAktie} style={{ background: "#007bff", color: "#fff", padding: "10px 20px", borderRadius: 5 }}>
+    <div style={{ marginTop: 30, textAlign: "center" }}>
+      <button
+        onClick={tilføjAktie}
+        style={{
+          background: "#007bff",
+          color: "#fff",
+          padding: "12px 20px",
+          borderRadius: 8,
+          fontSize: "1rem",
+          border: "none",
+          cursor: "pointer",
+        }}
+      >
         ➕ Tilføj aktie
       </button>
     </div>
-  );
-}
+  </div>
+);
+
 
 
   const fetchData = async () => {

@@ -293,70 +293,7 @@ export default function App() {
 
 
 
-  const fetchData = async () => {
-    if (!ticker) return;
-
-    const quoteRes = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`);
-    const profileRes = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${API_KEY}`);
-    const metricsRes = await fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${ticker}&metric=all&token=${API_KEY}`);
-
-    const [quote, profile, metrics] = await Promise.all([
-      quoteRes.json(),
-      profileRes.json(),
-      metricsRes.json()
-    ]);
-
-    setCurrency(profile.currency || "USD");
-
-    const newValues = {
-      pe: metrics.metric.peNormalizedAnnual,
-      eps: metrics.metric.epsNormalizedAnnual,
-      dividend: metrics.metric.dividendYield,
-      revenue: metrics.metric.revenuePerShareTTM,
-      netIncome: metrics.metric.netIncomePerShareTTM,
-      cashFlow: metrics.metric.freeCashFlowPerShareTTM,
-      equity: metrics.metric.bookValuePerShareAnnual,
-    };
-
-    setValues({ ...values, ...newValues });
-    setAutoFilled(Object.fromEntries(Object.keys(newValues).map(k => [k, true])));
-  };
-
-  const calculateScore = () => {
-    let s = 0;
-    const v = values;
-
-    if (v.pe < 15) s += 2;
-    else if (v.pe < 25) s += 1;
-
-    if (v.peg < 1) s += 2;
-    else if (v.peg < 2) s += 1;
-
-    if (v.eps > 0) s += 2;
-    if (v.dividend > 3) s += 2;
-    else if (v.dividend > 0) s += 1;
-
-    if (v.revenue > 1000000000) s += 2;
-    else if (v.revenue > 100000000) s += 1;
-
-    if (v.netIncome > 0) s += 2;
-    if (v.cashFlow > 0) s += 2;
-    if (v.equity > 0) s += 2;
-
-    const normalized = Math.round((s / 20) * 10);
-    setScore(normalized);
-
-    if (normalized <= 3) {
-      setColor("green");
-      setSummary("Lav risiko – stærke nøgletal");
-    } else if (normalized <= 6) {
-      setColor("orange");
-      setSummary("Moderat risiko – OK fundament");
-    } else {
-      setColor("red");
-      setSummary("Høj risiko – kræver grundig analyse");
-    }
-  };
+  
 
   return (
     <div style={{ maxWidth: 700, margin: "0 auto", padding: 20 }}>

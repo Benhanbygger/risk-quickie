@@ -48,10 +48,11 @@ const App = () => {
   };
 
   const handleSelect = (item) => {
+    console.log("Valgt:", item);
     setQuery(item.description);
     setTicker(item.symbol);
-    setShowDropdown(false);
     fetchStockData(item.symbol);
+    setTimeout(() => setShowDropdown(false), 200); // forsinket lukning
   };
 
   const fetchStockData = async (symbol) => {

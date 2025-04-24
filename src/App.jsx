@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const App = () => {
   const [query, setQuery] = useState("");
@@ -92,22 +93,30 @@ const App = () => {
           onChange={handleSearch}
           onFocus={() => setShowDropdown(searchResults.length > 0)}
         />
-        {showDropdown && (
-          <ul className="absolute bg-white border w-full max-h-60 overflow-y-auto z-10 rounded shadow">
-            {searchResults.map((item, index) => (
-              <li
-                key={index}
-                className="p-2 hover:bg-gray-200 cursor-pointer text-sm"
-                onMouseDown={(e) => {
-                  e.preventDefault(); // undgå blur
-                  handleSelect(item);
-                }}
-              >
-                {item.description} ({item.symbol})
-              </li>
-            ))}
-          </ul>
-        )}
+        <AnimatePresence>
+          {showDropdown && (
+            <motion.ul
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              transition={{ duration: 0.15 }}
+              className="absolute bg-white border w-full max-h-60 overflow-y-auto z-10 rounded-md shadow-lg mt-1"
+            >
+              {searchResults.map((item, index) => (
+                <li
+                  key={index}
+                  className="p-2 hover:bg-gray-100 cursor-pointer text-sm transition-colors"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleSelect(item);
+                  }}
+                >
+                  ({item.symbol}) {item.description}
+                </li>
+              ))}
+            </motion.ul>
+          )}
+        </AnimatePresence>
       </div>
 
       {data ? (

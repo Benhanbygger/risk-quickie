@@ -20,12 +20,11 @@ const App = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [wrapperRef]);
+  }, []);
 
   const handleSearch = async (e) => {
     const value = e.target.value;
     setQuery(value);
-    setShowDropdown(true);
 
     if (value.length > 1) {
       try {
@@ -38,21 +37,27 @@ const App = () => {
             (item) => item.type === "Common Stock" || item.type === "Equity"
           );
           setSearchResults(filtered);
+          setShowDropdown(filtered.length > 0);
+        } else {
+          setSearchResults([]);
+          setShowDropdown(false);
         }
       } catch (err) {
         console.error("Søgefejl:", err);
+        setSearchResults([]);
+        setShowDropdown(false);
       }
     } else {
       setSearchResults([]);
+      setShowDropdown(false);
     }
   };
 
   const handleSelect = (item) => {
-    console.log("Valgt:", item);
     setQuery(item.description);
     setTicker(item.symbol);
+    setShowDropdown(false);
     fetchStockData(item.symbol);
-    setTimeout(() => setShowDropdown(false), 200); // forsinket lukning
   };
 
   const fetchStockData = async (symbol) => {
@@ -85,14 +90,18 @@ const App = () => {
           placeholder="Søg aktie: f.eks. 'Novo Nordisk' eller 'NVO'"
           value={query}
           onChange={handleSearch}
+          onFocus={() => setShowDropdown(searchResults.length > 0)}
         />
-        {showDropdown && searchResults.length > 0 && (
+        {showDropdown && (
           <ul className="absolute bg-white border w-full max-h-60 overflow-y-auto z-10 rounded shadow">
             {searchResults.map((item, index) => (
               <li
                 key={index}
                 className="p-2 hover:bg-gray-200 cursor-pointer text-sm"
-                onMouseDown={() => handleSelect(item)}
+                onMouseDown={(e) => {
+                  e.preventDefault(); // undgå blur
+                  handleSelect(item);
+                }}
               >
                 {item.description} ({item.symbol})
               </li>

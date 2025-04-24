@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const App = () => {
   const [query, setQuery] = useState("");
@@ -6,8 +6,21 @@ const App = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [ticker, setTicker] = useState("");
   const [data, setData] = useState(null);
+  const wrapperRef = useRef(null);
 
   const FINNHUB_API_KEY = "d010239r01qv3oh1rcfgd010239r01qv3oh1rcg0";
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [wrapperRef]);
 
   const handleSearch = async (e) => {
     const value = e.target.value;
@@ -20,7 +33,6 @@ const App = () => {
           `https://finnhub.io/api/v1/search?q=${value}&token=${FINNHUB_API_KEY}`
         );
         const result = await response.json();
-        console.log("Søgeresultat:", result); // DEBUG
         if (result.result) {
           const filtered = result.result.filter(
             (item) => item.type === "Common Stock" || item.type === "Equity"
@@ -36,7 +48,7 @@ const App = () => {
   };
 
   const handleSelect = (item) => {
-    setQuery(item.symbol);
+    setQuery(item.description);
     setTicker(item.symbol);
     setShowDropdown(false);
     fetchStockData(item.symbol);
@@ -65,15 +77,13 @@ const App = () => {
   return (
     <div className="p-4 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Risk Quickie</h1>
-      <div className="relative mb-4">
+      <div className="relative mb-4" ref={wrapperRef}>
         <input
           type="text"
           className="w-full p-2 border border-gray-300 rounded-md focus:outline-none"
           placeholder="Søg aktie: f.eks. 'Novo Nordisk' eller 'NVO'"
           value={query}
           onChange={handleSearch}
-          onFocus={() => setShowDropdown(true)}
-          // onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
         />
         {showDropdown && searchResults.length > 0 && (
           <ul className="absolute bg-white border w-full max-h-60 overflow-y-auto z-10 rounded shadow">

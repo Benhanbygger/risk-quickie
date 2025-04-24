@@ -20,7 +20,7 @@ const App = () => {
           `https://finnhub.io/api/v1/search?q=${value}&token=${FINNHUB_API_KEY}`
         );
         const result = await response.json();
-        console.log("Søgeresultat:", result);
+        console.log("Søgeresultat:", result); // DEBUG
         if (result.result) {
           const filtered = result.result.filter(
             (item) => item.type === "Common Stock" || item.type === "Equity"
@@ -73,7 +73,7 @@ const App = () => {
           value={query}
           onChange={handleSearch}
           onFocus={() => setShowDropdown(true)}
-          onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+          // onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
         />
         {showDropdown && searchResults.length > 0 && (
           <ul className="absolute bg-white border w-full max-h-60 overflow-y-auto z-10 rounded shadow">
@@ -81,7 +81,7 @@ const App = () => {
               <li
                 key={index}
                 className="p-2 hover:bg-gray-200 cursor-pointer text-sm"
-                onMouseDown={() => handleSelect(item)} // 🔧 fixet her
+                onMouseDown={() => handleSelect(item)}
               >
                 {item.description} ({item.symbol})
               </li>

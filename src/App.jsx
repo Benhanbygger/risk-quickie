@@ -7,7 +7,7 @@ const App = () => {
   const [ticker, setTicker] = useState("");
   const [data, setData] = useState(null);
 
-  const FINNHUB_API_KEY = "YOUR_FINNHUB_API_KEY";
+  const FINNHUB_API_KEY = "d010239r01qv3oh1rcfgd010239r01qv3oh1rcg0";
 
   const handleSearch = async (e) => {
     const value = e.target.value;
@@ -20,6 +20,7 @@ const App = () => {
           `https://finnhub.io/api/v1/search?q=${value}&token=${FINNHUB_API_KEY}`
         );
         const result = await response.json();
+        console.log("Søgeresultat:", result); // DEBUG
         if (result.result) {
           const filtered = result.result.filter(
             (item) => item.type === "Common Stock" || item.type === "Equity"
@@ -43,21 +44,13 @@ const App = () => {
 
   const fetchStockData = async (symbol) => {
     try {
-      // Yahoo Finance API via RapidAPI
       const yahooResponse = await fetch(
-        `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=financialData,defaultKeyStatistics,summaryDetail`,
-        {
-          method: "GET",
-          headers: {
-            // Her kræves ingen RapidAPI nøgle, Yahoo er åben via dette endpoint
-          },
-        }
+        `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=financialData,defaultKeyStatistics,summaryDetail`
       );
       const yahooJson = await yahooResponse.json();
       if (yahooJson.quoteSummary.result) {
         setData(yahooJson.quoteSummary.result[0]);
       } else {
-        // Fallback til Finnhub hvis Yahoo fejler
         const finnhubResponse = await fetch(
           `https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${FINNHUB_API_KEY}`
         );

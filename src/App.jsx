@@ -20,7 +20,7 @@ const App = () => {
           `https://finnhub.io/api/v1/search?q=${value}&token=${FINNHUB_API_KEY}`
         );
         const result = await response.json();
-        console.log("Søgeresultat:", result); // DEBUG
+        console.log("Søgeresultat:", result);
         if (result.result) {
           const filtered = result.result.filter(
             (item) => item.type === "Common Stock" || item.type === "Equity"
@@ -81,7 +81,7 @@ const App = () => {
               <li
                 key={index}
                 className="p-2 hover:bg-gray-200 cursor-pointer text-sm"
-                onClick={() => handleSelect(item)}
+                onMouseDown={() => handleSelect(item)} // 🔧 fixet her
               >
                 {item.description} ({item.symbol})
               </li>

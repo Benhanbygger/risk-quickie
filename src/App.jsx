@@ -12,11 +12,11 @@ const App = () => {
   const FINNHUB_API_KEY = "d010239r01qv3oh1rcfgd010239r01qv3oh1rcg0";
 
   useEffect(() => {
-    function handleClickOutside(event) {
+    const handleClickOutside = (event) => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
-    }
+    };
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -96,20 +96,21 @@ const App = () => {
         <AnimatePresence>
           {showDropdown && (
             <motion.ul
-              initial={{ opacity: 0, y: -8 }}
+              initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
+              exit={{ opacity: 0, y: -5 }}
               transition={{ duration: 0.2 }}
-              className="absolute w-full max-h-60 overflow-y-auto z-10 rounded-md shadow-lg mt-1 bg-[#ededed] border border-gray-300"
+              className="absolute w-full max-h-60 overflow-y-auto z-10 rounded-md shadow-lg mt-1 bg-[#ededed]"
             >
               {searchResults.map((item, index) => (
                 <li
                   key={index}
-                  className="p-2 text-sm cursor-pointer transition-colors hover:bg-[#84a112]"
+                  className="p-2 hover:bg-[#84a112] cursor-pointer text-sm transition-colors"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handleSelect(item);
                   }}
+                  style={{ cursor: "pointer" }}
                 >
                   ({item.symbol}) {item.description}
                 </li>

@@ -12,7 +12,7 @@ export default function StockMetrics() {
   const [error, setError] = useState("");
 
   const handleInputChange = async (e) => {
-    const value = e.target.value;
+    const value = e.target.value.toUpperCase();
     setQuery(value);
 
     if (value.length < 1) {
@@ -24,10 +24,28 @@ export default function StockMetrics() {
       const response = await axios.get(
         `https://finnhub.io/api/v1/search?q=${value}&token=d010239r01qv3oh1rcfgd010239r01qv3oh1rcg0`
       );
-      const filtered = response.data.result.filter(
+
+      let filtered = response.data.result.filter(
         (item) => item.symbol && item.description
       );
-      setSuggestions(filtered);
+
+      // Hvis der kun er dårlige matches (som vi så med "NVO"), så forsøg at finde ticker direkte
+      if (filtered.length > 0) {
+        const exactMatches = filtered.filter(
+          (item) => item.symbol.toUpperCase() === value
+        );
+
+        if (exactMatches.length > 0) {
+          // Hvis der er en præcis ticker-match (eks: NVO), så vis KUN den
+          setSuggestions(exactMatches);
+        } else {
+          // Ellers vis de normale forslag
+          setSuggestions(filtered);
+        }
+      } else {
+        setSuggestions([]);
+      }
+
     } catch (err) {
       console.error("Error fetching ticker suggestions", err);
     }

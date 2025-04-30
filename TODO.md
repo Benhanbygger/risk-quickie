@@ -25,6 +25,7 @@ En struktureret oversigt over status og kommende udvikling i appen.
   - [x] Søger via ticker eller firmanavn
   - [x] Dropdown med forslag (Yahoo/Finnhub)
   - [x] Validering og fejlhåndtering
+  - [x] Forbedret filtrering (viser fx nu korrekt NVO/Novo Nordisk)
 
 ---
 
@@ -64,4 +65,4 @@ En struktureret oversigt over status og kommende udvikling i appen.
 
 ---
 
-🧠 Sidst opdateret: [indsæt dato]
+🧠 Sidst opdateret: 2025-04-30

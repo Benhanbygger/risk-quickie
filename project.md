@@ -230,5 +230,199 @@ Appen har potentiale til at blive en gateway til investering – med særligt fo
 Med en stærk frontend-struktur, skalerbare datakilder og en klar værdiforankring er Risk Quickie både en læringsplatform og et investeringsværktøj i ét.  
 Med støtte fra partnere eller investorer er der mulighed for hurtig skalering og udrulning.
 
+**Projektoverdragelse – Risk Quickie**
+
+*Udviklingsproces, platforme og samarbejdsstruktur*
+
+---
+
+### ✨ Projektoversigt
+
+**Navn:** Risk Quickie  
+**Type:** Webbaseret aktie-risikovurderingsapp  
+**Formål:** Lynhurtig vurdering af aktier baseret på nøgletal, AI-kommentarer og nyhedsdata  
+**Primær målgruppe:** Kvinder 40+ med interesse i investering uden støj og kompleksitet  
+
+**Projektansvarlig:** Bendict Nisbeth-Hansen  
+**Kodeansvarlig (sparring og teknisk struktur):** "Gideon" (ChatGPT)  
+
+---
+
+### 📊 Platforme og teknologier
+
+**1. GitHub**  
+- Versionsstyring og historik
+- Enkelt branch-model (kun `main` anvendt indtil videre)
+- Commit-praksis med forklarende beskeder for hver session
+
+**2. Vercel**  
+- Hosting-platform for frontend
+- Direkte integration med GitHub repo
+- Live preview efter hver push til `main`
+
+**3. Visual Studio Code (VS Code)**  
+- Brugt som lokal udviklingsplatform
+- Tæt koblet til GitHub via terminal og Source Control
+
+**4. ChatGPT (arbejdssessions via GPT-4)**  
+- Anvendes som teknisk sparringspartner og kodegenerator (Gideon)
+- Kommunikationen foregår i sammenhængende, versionsstyrede samtaler:
+  - https://chatgpt.com/c/6810dd6b-753c-800e-9fb5-0ac4f8f284cf
+  - https://chatgpt.com/c/6811a3bc-80e0-800e-b5fb-71715b18792f
+  - https://chatgpt.com/c/680bff2f-002c-800e-9446-42a457259184
+
+---
+
+### 🚀 Teknisk stack og struktur
+
+**Frontend:** React.js + TailwindCSS  
+**Komponentstruktur:**
+- `App.jsx` fungerer som ramme
+- `StockMetrics.jsx` indeholder søgning og visning af nøgletal
+- `KeyMetricField.jsx` er genbrugelig UI-komponent med tooltip og forklaring
+
+**Styling:**
+- Tailwind anvendes konsekvent
+- Font: Roboto (via Tailwind og Google Fonts)
+- Fokus på mobilvenligt og responsivt design
+
+**API-kilder:**
+- Finnhub (live nøgletal og firmadata)
+- Marketaux (nyheder) [ikke fuldt integreret endnu]
+- Yahoo Finance (planlagt som fallback)
+
+---
+
+### ⚖️ Arbejdsgang og samarbejde
+
+**Grundprincip:** Vi arbejder i én fil ad gangen og skriver aldrig parallel kode.  
+**Al kommunikation sker i chatten med step-by-step-guides.**
+
+**Fast arbejdsmønster:**
+1. Bendict klargør og sender nuværende kode (fx `App.jsx`)
+2. Gideon returnerer en komplet, opdateret version af samme fil
+3. Koden testes lokalt og pushes til GitHub, som automatisk opdaterer preview via Vercel
+
+**Fordele ved denne metode:**
+- Eliminerer copy/paste-fejl
+- Bevarer fuld kontrol og forståelse hos produktansvarlig
+- Dokumentation og beslutninger ligger i samtalehistorikken
+
+---
+
+### 📆 Status og fremtidig overdragelse
+
+**Projektets nuværende status:**
+- Grundstruktur og key features (søgning, nøgletal, dynamisk visning) er på plads
+- Design og interaktivitet er under finjustering
+- Næste fokus: historiske grafer, AI-kommentarer, nyhedsmodul
+
+**Overdragelse til ny udvikler:**
+- Alt kode ligger åbent på GitHub repo
+- Alle komponenter er dokumenterede via naming og struktureret opbygning
+- Samtalehistorik i ChatGPT dokumenterer beslutninger, fejl og løsninger
+
+---
+
+### 📚 Uddybende udviklingslog (baseret på GPT-sessions)
+
+**Uddrag og tekniske beslutninger fra GPT-arbejdssessions:**
+
+- **Ticker-søgning og dropdown-fejl:** Projektet har løst problemer med at tickere som "NVO" ikke blev returneret korrekt. Der er indført forbedret filtrering og validering ved indtastning, så både præcise matches og forslag håndteres brugervenligt.
+
+- **Cursor og hover-problematikker:** Flere komponenter (dropdown, tooltips) havde udfordringer med at `cursor: pointer` ikke blev vist, særligt i Chrome og Safari. Fejlen blev lokaliseret til kombination af Tailwind base styles og elementer uden korrekt bredde/højde. Løst via Tailwind-klasse og inline-style.
+
+- **Tooltip-komponenter:** Komponenter som `KeyMetricField` blev oprettet med `useState`-styret visning, klikbart `?`-ikon og responsive forklaringsfelter. Designet blev justeret ift. hover, mobilvisning og padding.
+
+- **Step-by-step-udvikling:** Al kodeudvikling sker én komponent ad gangen, og altid med fuld gensendelse af hele filen. Dette bruges aktivt til at undgå fragmentering og sikre konsistens i arbejdsgangen.
+
+- **Git-problemløsning:** Der har været merge-konflikter og push-fejl pga. slettede undermapper og divergerende commits. Projektet anvender nu pull-commit-push flow med dokumenteret merge-strategi (via Vim/CLI).
+
+- **Test og visuel feedback:** Brugeren tester løbende i browser og rapporterer UI-opførsel direkte, som så omsættes til layout- og funktionstilpasninger i chatten.
+
+*(Sektionen opdateres løbende ved ny viden i samtalehistorikken)*
+
+---
+
+### 🔧 Tekniske anbefalinger og erfaringer (til næste udvikler)
+
+- **Arbejd i én fil ad gangen:** Projektet bygger på et flow med 100 % synkron kodning, hvor hele komponenter udskiftes frem for at arbejde med snippets. Det reducerer fejl og øger overblik.
+
+- **Undgå parallel udvikling uden versionsstyring:** Man bør ikke arbejde i separate branches eller sideløbende komponentversioner uden klar commitstruktur – det skaber nemt rod i forhold til UI og dataflow.
+
+- **Tailwind skal bruges konsekvent:** Styling er 100 % bygget med Tailwind-klasser. Brug af ekstern CSS bør undgås for at bevare den nuværende struktur og visuelle konsistens.
+
+- **Roboto-font er valgt med vilje:** Fontvalg er del af designbeslutningen – lad det blive medmindre en designændring er besluttet centralt.
+
+- **Tooltip-komponenter er følsomme ift. mobil/hover:** Cursor-styling og interaktiv feedback kræver omhyggelig testing i flere browsere (Chrome, Safari) og på touch-devices. Brug både Tailwind og evt. inline-style for at sikre synlig interaktivitet.
+
+- **Dropdown-søgning er skræddersyet:** Søgning på ticker vs. firmanavn er tunet manuelt. Hvis API-struktur ændres eller en anden kilde tages i brug, skal dropdown-logikken gennemgås og testes grundigt.
+
+- **Vercel og GitHub er tæt koblet:** Undgå force push og historiesletning, da det kan forstyrre deploy-flow. Push til `main` er automatisk live.
+
+- **Kommunikér beslutninger i kode eller commit:** Hvis der ikke bruges ChatGPT fremadrettet, anbefales det at dokumentere beslutninger i README, issues eller commit-beskeder.
+
+- **VictoryCharts (planlagt):** Der er planlagt integration af Victory Line Charts til visning af historiske nøgletal. Biblioteket er valgt for dets simple, responsive integration med React. Husk at tilpasse datakilder og ydeevne ved store datasæt.
+
+- **AI-kommentarer (under udvikling):** Risiko- og vurderingstekster skal genereres dynamisk via GPT-baserede skabeloner baseret på nøgletal og nyheder. Kommentarer skal være lette at vedligeholde og bør holdes adskilt fra UI-komponenter.
+
+- **Datavalidering:** Live-data fra Finnhub kan indeholde `null` eller `undefined`. Al input bør vises brugervenligt, fx “–” i stedet for tomme felter, og applikationen må ikke crashe på baggrund af manglende felter.
+
+- **Arbejd i én fil ad gangen:** Projektet bygger på et flow med 100 % synkron kodning, hvor hele komponenter udskiftes frem for at arbejde med snippets. Det reducerer fejl og øger overblik.
+
+- **Undgå parallel udvikling uden versionsstyring:** Man bør ikke arbejde i separate branches eller sideløbende komponentversioner uden klar commitstruktur – det skaber nemt rod i forhold til UI og dataflow.
+
+- **Tailwind skal bruges konsekvent:** Styling er 100 % bygget med Tailwind-klasser. Brug af ekstern CSS bør undgås for at bevare den nuværende struktur og visuelle konsistens.
+
+- **Roboto-font er valgt med vilje:** Fontvalg er del af designbeslutningen – lad det blive medmindre en designændring er besluttet centralt.
+
+- **Tooltip-komponenter er følsomme ift. mobil/hover:** Cursor-styling og interaktiv feedback kræver omhyggelig testing i flere browsere (Chrome, Safari) og på touch-devices. Brug både Tailwind og evt. inline-style for at sikre synlig interaktivitet.
+
+- **Dropdown-søgning er skræddersyet:** Søgning på ticker vs. firmanavn er tunet manuelt. Hvis API-struktur ændres eller en anden kilde tages i brug, skal dropdown-logikken gennemgås og testes grundigt.
+
+- **Vercel og GitHub er tæt koblet:** Undgå force push og historiesletning, da det kan forstyrre deploy-flow. Push til `main` er automatisk live.
+
+- **Kommunikér beslutninger i kode eller commit:** Hvis der ikke bruges ChatGPT fremadrettet, anbefales det at dokumentere beslutninger i README, issues eller commit-beskeder.
+
+
+
+### 🧭 Forslag til næste udviklingsrunde (roadmap)
+
+1. **Victory Line Charts:**
+   - Implementér grafer for EPS, omsætning, cash flow, nettoresultat og egenkapital
+   - Datakilder skal standardiseres og skaleres
+
+2. **AI-kommentarer til nøgletal:**
+   - Udvid `KeyMetricField` med dynamiske vurderingstekster
+   - Introducér central logik der genererer AI-beskrivelser baseret på benchmarks og kontekst
+
+3. **Nyhedsmodul:**
+   - Integrér Marketaux API (eller lign.)
+   - Vis resumé, dato og kilde i dansk format
+   - Forbered filtrering og sentiment-analyse
+
+4. **Validering og fallback-håndtering:**
+   - Sikr at `null` eller manglende data vises som “–” eller advarsel
+   - Tilføj loading- og fejltilstande på komponentniveau
+
+5. **Flersprogsfunktion (DK/EN):**
+   - Strukturér tekster og labels via centralt oversættelsesmodul
+
+6. **Sammenligningsfunktion:**
+   - Muliggør visning af 2–3 aktier side om side
+   - Kræver state-refaktorering og layout-tilpasning
+
+7. **PDF-eksport eller deling:**
+   - Tilføj print- eller delingsvenlig version af vurderingssiden
+   
+8. **Responsivt design review:**
+   - Gennemgå alle komponenter på mobil, tablet og desktop
+   - Særligt fokus på klikbarhed og læsbarhed af tooltips
+
+---
+
+*Dokument udarbejdet af Gideon (ChatGPT) i samarbejde med Bendict Nisbeth-Hansen – april 2025.* af Gideon (ChatGPT) i samarbejde med Bendict Nisbeth-Hansen – april 2025.*
+
+
 
 

@@ -38,6 +38,25 @@ Risk-Quickie er et browserbaseret værktøj til lynhurtig vurdering af enkeltakt
 - **Projektstyring**: TODO.md, PROJECT.md og PROGRESS.md
 - **Designstil**: Minimalistisk, mobilvenligt, app-lignende oplevelse
 
+
+---
+
+## 🛡️ Brugersikkerhed
+
+- Ingen login eller brugerkonto kræves
+- Ingen tracking eller deling af data
+- Data hentes kun i realtid fra officielle finansielle API'er
+
+---
+
+## 📍 Status
+
+Appen er funktionel i sin grundstruktur og bruges aktivt til test. Udviklingen sker i faser og organiseres via TODO.md og PROGRESS.md. Næste mål: Hente og visualisere historiske nøgletal samt færdiggørelse af AI-modul og nyhedsopsummering.
+
+---
+
+📄 Sidst opdateret: 2025-04-30
+
 ---
 
 ## 📦 Filstruktur (udsnit)

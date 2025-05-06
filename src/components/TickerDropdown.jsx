@@ -3,10 +3,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+const FINNHUB_API_KEY = "d010239r01qv3oh1rcfgd010239r01qv3oh1rcg0";
+
 export default function TickerDropdown() {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [quote, setQuote] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -14,10 +17,21 @@ export default function TickerDropdown() {
     setQuery(e.target.value);
   };
 
-  const handleSelect = (ticker) => {
+  const handleSelect = async (ticker) => {
     setSelected(ticker);
     setQuery(`${ticker.symbol} - ${ticker.description}`);
     setSuggestions([]);
+    setQuote(null);
+
+    try {
+      const res = await axios.get(
+        `https://finnhub.io/api/v1/quote?symbol=${ticker.symbol}&token=${FINNHUB_API_KEY}`
+      );
+      setQuote(res.data);
+    } catch (err) {
+      console.error("Kunne ikke hente aktiedata:", err);
+      setQuote(null);
+    }
   };
 
   useEffect(() => {
@@ -31,7 +45,7 @@ export default function TickerDropdown() {
       setError("");
       try {
         const response = await axios.get(
-          `https://finnhub.io/api/v1/search?q=${query}&token=d010239r01qv3oh1rcfgd010239r01qv3oh1rcg0`
+          `https://finnhub.io/api/v1/search?q=${query}&token=${FINNHUB_API_KEY}`
         );
         if (response.data.result) {
           const filtered = response.data.result.filter(
@@ -94,6 +108,14 @@ export default function TickerDropdown() {
           <p className="text-lg font-semibold">
             Valgt: {selected.symbol} ({selected.description})
           </p>
+
+          {quote && (
+            <div className="mt-2 text-sm text-gray-700">
+              <p>Pris: ${quote.c}</p>
+              <p>Dagens høj: ${quote.h} | lav: ${quote.l}</p>
+              <p>Ændring: {quote.d} ({quote.dp}%)</p>
+            </div>
+          )}
         </div>
       )}
     </div>

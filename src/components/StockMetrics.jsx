@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import axios from "axios";
+import KeyMetricField from "./KeyMetricField";
 
 export default function StockMetrics() {
   const [query, setQuery] = useState("");
@@ -10,6 +11,7 @@ export default function StockMetrics() {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [historicalData, setHistoricalData] = useState([]);
 
   const handleInputChange = async (e) => {
     const value = e.target.value.toUpperCase();
@@ -29,23 +31,19 @@ export default function StockMetrics() {
         (item) => item.symbol && item.description
       );
 
-      // Hvis der kun er dårlige matches (som vi så med "NVO"), så forsøg at finde ticker direkte
       if (filtered.length > 0) {
         const exactMatches = filtered.filter(
           (item) => item.symbol.toUpperCase() === value
         );
 
         if (exactMatches.length > 0) {
-          // Hvis der er en præcis ticker-match (eks: NVO), så vis KUN den
           setSuggestions(exactMatches);
         } else {
-          // Ellers vis de normale forslag
           setSuggestions(filtered);
         }
       } else {
         setSuggestions([]);
       }
-
     } catch (err) {
       console.error("Error fetching ticker suggestions", err);
     }
@@ -58,11 +56,13 @@ export default function StockMetrics() {
     setLoading(true);
     setError("");
     setMetrics(null);
+    setHistoricalData([]);
 
     try {
       const res = await axios.get(
         `https://finnhub.io/api/v1/stock/metric?symbol=${item.symbol}&metric=all&token=d010239r01qv3oh1rcfgd010239r01qv3oh1rcg0`
       );
+      console.log("Finnhub metrics:", res.data.metric); // 👈 log data
       const m = res.data.metric;
       setMetrics({
         pe: m.peNormalizedAnnual,
@@ -72,13 +72,56 @@ export default function StockMetrics() {
         roe: m.roeAnnual,
         revenueGrowth: m.revenueGrowthAnnual,
         forwardPe: m.forwardPeAnnual,
-        dividendYield: m.dividendYieldIndicatedAnnual,
+        dividendYield: m.dividendYieldIndicatedAnnual, // ikke gang med 100 her
       });
+
+      await fetchHistoricalData(item.symbol);
     } catch (err) {
       console.error("Fejl ved hentning af nøgletal", err);
       setError("Kunne ikke hente nøgletal for denne ticker.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchHistoricalData = async (symbol) => {
+    const token = "d010239r01qv3oh1rcfgd010239r01qv3oh1rcg0";
+
+    const endpoints = {
+      income: `https://finnhub.io/api/v1/stock/financials?symbol=${symbol}&statement=income&freq=annual&token=${token}`,
+      balance: `https://finnhub.io/api/v1/stock/financials?symbol=${symbol}&statement=balance&freq=annual&token=${token}`,
+      cashflow: `https://finnhub.io/api/v1/stock/financials?symbol=${symbol}&statement=cash-flow&freq=annual&token=${token}`,
+    };
+
+    try {
+      const [incomeRes, balanceRes, cashflowRes] = await Promise.all([
+        axios.get(endpoints.income),
+        axios.get(endpoints.balance),
+        axios.get(endpoints.cashflow),
+      ]);
+
+      const years = incomeRes.data.data.slice(0, 5).map((entry) => entry.year);
+
+      const mergedData = years.map((year) => {
+        const income = incomeRes.data.data.find((d) => d.year === year) || {};
+        const balance = balanceRes.data.data.find((d) => d.year === year) || {};
+        const cash = cashflowRes.data.data.find((d) => d.year === year) || {};
+
+        return {
+          year,
+          eps: income.eps,
+          revenue: income.revenue,
+          netIncome: income.netIncome,
+          equity: balance.totalEquity,
+          cashFlow: cash.cashFlowFromOperatingActivities,
+        };
+      });
+
+      setHistoricalData(mergedData);
+      console.log("Historiske data:", mergedData);
+    } catch (err) {
+      console.error("Fejl ved hentning af historiske nøgletal:", err);
+      setHistoricalData([]);
     }
   };
 
@@ -117,17 +160,29 @@ export default function StockMetrics() {
       )}
 
       {metrics && (
-        <div className="mt-6 space-y-2">
+        <div className="mt-6 space-y-4">
           <h3 className="text-xl font-semibold text-center mb-4">Nøgletal</h3>
-          <ul className="space-y-1">
-            <li><strong>P/E:</strong> {metrics.pe}</li>
-            <li><strong>PEG:</strong> {metrics.peg}</li>
-            <li><strong>P/B:</strong> {metrics.pb}</li>
-            <li><strong>EPS:</strong> {metrics.eps}</li>
-            <li><strong>ROE:</strong> {metrics.roe}</li>
-            <li><strong>Revenue Growth:</strong> {metrics.revenueGrowth}%</li>
-            <li><strong>Forward P/E:</strong> {metrics.forwardPe}</li>
-            <li><strong>Dividend Yield:</strong> {metrics.dividendYield}%</li>
+
+          <KeyMetricField label="P/E" value={metrics.pe} explanation="Et lavt P/E-tal kan indikere at aktien er undervurderet – men det afhænger af branchen." />
+          <KeyMetricField label="PEG" value={metrics.peg} explanation="En PEG-ratio på 1 eller mindre kan signalere, at aktiekursen er undervurderet." />
+          <KeyMetricField label="P/B" value={metrics.pb} explanation="P/B måler aktiens pris i forhold til dens bogførte værdi. Under 1 kan indikere undervurdering." />
+          <KeyMetricField label="EPS" value={metrics.eps} explanation="EPS viser hvor meget virksomheden tjener per aktie – jo højere, jo bedre." />
+          <KeyMetricField label="ROE" value={metrics.roe} explanation="ROE viser hvor effektivt virksomheden skaber afkast til ejerne – højt er godt." />
+          <KeyMetricField label="Revenue Growth" value={metrics.revenueGrowth != null ? `${(metrics.revenueGrowth * 100).toFixed(2)}%` : "–"} explanation="Viser vækst i omsætning år-over-år. Positiv vækst er ofte et godt tegn." />
+          <KeyMetricField label="Forward P/E" value={metrics.forwardPe} explanation="Forward P/E vurderer aktien baseret på forventet indtjening – nyttigt til fremsynede vurderinger." />
+          <KeyMetricField label="Dividend Yield" value={metrics.dividendYield != null ? `${metrics.dividendYield.toFixed(2)}%` : "–"} explanation="Hvor stor en procentdel af aktiekursen udbetales som udbytte – vigtigt for udbytteinvestorer." />
+        </div>
+      )}
+
+      {historicalData.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold mb-2">Seneste 5 års data:</h3>
+          <ul className="text-sm space-y-1">
+            {historicalData.map((yearData) => (
+              <li key={yearData.year}>
+                <strong>{yearData.year}</strong>: EPS {yearData.eps}, Revenue {yearData.revenue}, Net Income {yearData.netIncome}, Cash Flow {yearData.cashFlow}, Equity {yearData.equity}
+              </li>
+            ))}
           </ul>
         </div>
       )}
